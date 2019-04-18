@@ -6,7 +6,9 @@
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 int lcdPin = 2;
-int buttonPin = 
+int buttonPin = 12;
+int buzzerPin = 3;
+int buzzerPin2 = 2;
 
 const byte ROWS = 4;
 const byte COLS = 4;
@@ -26,10 +28,14 @@ Keypad myKeypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 int digit = 0;
 int timer = 0;
 int actualTimer = 0;
+int flag = 1;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(buzzerPin2, OUTPUT);
+  pinMode(buttonPin, INPUT);
 
   // initialize the LCD
   lcd.begin();
@@ -153,16 +159,26 @@ void loop() {
 
 
       //Everything that happens when alarm goes off, needs to be in this loop
-      if(actualTimer == 0){
+      while(actualTimer == 0 && flag == 1){
          lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("TURN BUZZER ON!!");
         digitalWrite(lcdPin, HIGH);  
-        delay(4000);                 //turn this message off when the alarm goes off 
-        digitalWrite(lcdPin, LOW);
-        lcd.clear();
+        tone(buzzerPin, 440);
+        delay(10);
+        //tone(buzzerPin2, 400);
+        //delay(2000);                 //turn this message off when the alarm goes off 
+
+        if(digitalRead(buttonPin) == HIGH){
+          digitalWrite(lcdPin, LOW);
+          noTone(buzzerPin);
+          //noTone(buzzerPin2);
+          lcd.clear();
+          flag = 0;
+        }
       }
   }
+  flag = 1;
 
   
 }
