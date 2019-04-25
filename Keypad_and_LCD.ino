@@ -20,7 +20,7 @@ char keys[ROWS][COLS] = {
   {'*', '0', '#', 'D'}
 };
 
-byte rowPins[ROWS] = {11, 10, 9, 8}; //{A0, A1, A2, A3};
+byte rowPins[ROWS] = {11, 10, 9, 8};
 byte colPins[COLS] = {7, 6, 5, 4};
 
 Keypad myKeypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
@@ -29,6 +29,7 @@ int digit = 0;
 int timer = 0;
 int actualTimer = 0;
 int flag = 1;
+int start = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -44,11 +45,11 @@ void setup() {
   lcd.setBacklight((uint8_t)1);
 
   // First row
-  lcd.print("Warming up");
+  lcd.print("Input Time");
 
   // Second row
   lcd.setCursor(0,1);
-  lcd.print("the toaster....");
+  lcd.print("'#' to start");
 
   pinMode(lcdPin, OUTPUT);
   delay(1000);
@@ -57,6 +58,15 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  if(start == 1){
+    delay(200);
+    lcd.setCursor(0,0);
+    lcd.print("Input Time");
+    lcd.setCursor(0,1);
+    lcd.print("'#' to start");
+    start = 0;
+  }
+  
   char customKey = myKeypad.getKey(); //defining the key that was pressed
 
   if(customKey){
@@ -160,21 +170,24 @@ void loop() {
 
       //Everything that happens when alarm goes off, needs to be in this loop
       while(actualTimer == 0 && flag == 1){
-         lcd.clear();
+        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("TURN BUZZER ON!!");
+        Serial.println("TURN BUZZER ON!!");
+        lcd.print("TIME IS UP!!");
         digitalWrite(lcdPin, HIGH);  
-        tone(buzzerPin, 440);
-        delay(10);
+        tone(buzzerPin, 240);
+        delay(20);
         //tone(buzzerPin2, 400);
         //delay(2000);                 //turn this message off when the alarm goes off 
 
         if(digitalRead(buttonPin) == HIGH){
           digitalWrite(lcdPin, LOW);
           noTone(buzzerPin);
+          Serial.println("Turn buzzer off");
           //noTone(buzzerPin2);
           lcd.clear();
           flag = 0;
+          start = 1;
         }
       }
   }
