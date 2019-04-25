@@ -1,28 +1,28 @@
 #include <Keypad.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <Servo.h> 
 
-// Set the LCD address to 0x27 for a 16 chars and 2 line display
+Servo left;
+Servo right;
+
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-int lcdPin = 2;
-int buttonPin = 12;
+const int pingPin = A0;
+
+int buttonPin = 12; 
 int buzzerPin = 3;
-int buzzerPin2 = 2;
 
 const byte ROWS = 4;
 const byte COLS = 4;
-
 char keys[ROWS][COLS] = {
   {'1', '2', '3', 'A'},
   {'4', '5', '6', 'B'},
   {'7', '8', '9', 'C'},
   {'*', '0', '#', 'D'}
 };
-
 byte rowPins[ROWS] = {11, 10, 9, 8};
 byte colPins[COLS] = {7, 6, 5, 4};
-
 Keypad myKeypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 int digit = 0;
@@ -31,13 +31,18 @@ int actualTimer = 0;
 int flag = 1;
 int start = 0;
 
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(buzzerPin, OUTPUT);
-  pinMode(buzzerPin2, OUTPUT);
   pinMode(buttonPin, INPUT);
-
+  
+  left.attach(13);
+  right.attach(2);
+  right.write(90);
+  left.write(90);
+  
   // initialize the LCD
   lcd.begin();
 
@@ -51,7 +56,7 @@ void setup() {
   lcd.setCursor(0,1);
   lcd.print("'#' to start");
 
-  pinMode(lcdPin, OUTPUT);
+ // pinMode(lcdPin, OUTPUT);
   delay(1000);
 }
 
@@ -170,24 +175,56 @@ void loop() {
 
       //Everything that happens when alarm goes off, needs to be in this loop
       while(actualTimer == 0 && flag == 1){
-        lcd.clear();
+       /* lcd.clear();
         lcd.setCursor(0,0);
         Serial.println("TURN BUZZER ON!!");
-        lcd.print("TIME IS UP!!");
-        digitalWrite(lcdPin, HIGH);  
-        tone(buzzerPin, 240);
-        delay(20);
-        //tone(buzzerPin2, 400);
-        //delay(2000);                 //turn this message off when the alarm goes off 
+        lcd.print("TIME IS UP!!");  
+        */
+        tone(buzzerPin, 240);   
+       // delay(20);
+       
+      
+        
 
+        long duration, inches, cm;
+        
+        pinMode(pingPin, OUTPUT);
+        digitalWrite(pingPin, LOW);
+        delayMicroseconds(2);
+        digitalWrite(pingPin, HIGH);
+        delayMicroseconds(5);
+        digitalWrite(pingPin, LOW);
+        pinMode(pingPin, INPUT);
+        duration = pulseIn(pingPin, HIGH);
+        inches = duration / 74 / 2;
+        cm = duration / 29 / 2;
+        Serial.print(inches);
+        Serial.print("in, ");
+        Serial.print(cm);
+        Serial.print("cm");
+        Serial.println();
+        
+        if (inches < 6) {
+          Serial.print("Obstacle detected");
+          right.write(180);
+          left.write(180);
+         // delay(50);
+        }
+        else{
+          right.write(180);
+          left.write(-180);
+        }
+        
         if(digitalRead(buttonPin) == HIGH){
-          digitalWrite(lcdPin, LOW);
+         // digitalWrite(lcdPin, LOW);
           noTone(buzzerPin);
           Serial.println("Turn buzzer off");
           //noTone(buzzerPin2);
           lcd.clear();
           flag = 0;
           start = 1;
+          right.write(90);
+          left.write(90);
         }
       }
   }
